@@ -2,54 +2,34 @@ using UnityEngine;
 
 public class HealingObject : MonoBehaviour
 {
-    public float attractionRadius = 5f;
-    public float attractionSpeed = 5f;
-    public int healAmount = 20;
+    public int healAmount = 10;
+    public float healInterval = 1f;
+    public float triggerDistance = 2f;
 
-    private Transform playerTransform;
-    private bool isAttracted = false;
-    private TrailRenderer trailRenderer;
+    private Transform player;
+    private bool canHeal = false;
 
-    void Start()
+    private void Start()
     {
-        playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
-        trailRenderer = GetComponent<TrailRenderer>();
+        player = GameObject.FindGameObjectWithTag("Player").transform;
+        InvokeRepeating("HealPlayer", 0f, healInterval);
     }
 
-    void Update()
+    private void Update()
     {
-        if (isAttracted)
-        {
-            Vector3 direction = playerTransform.position - transform.position;
-            transform.Translate(direction.normalized * attractionSpeed * Time.deltaTime);
+        float distance = Vector3.Distance(transform.position, player.position);
 
-            if (Vector3.Distance(transform.position, playerTransform.position) < 0.5f)
-            {
-                playerTransform.GetComponent<HealthManager>().Heal(healAmount);
-                HandleObjectDestroy();
-            }
-        }
-        else
+        if (distance <= triggerDistance && Input.GetKeyDown(KeyCode.E))
         {
-            if (Vector3.Distance(transform.position, playerTransform.position) < attractionRadius)
-            {
-                isAttracted = true;
-            }
+            Destroy(gameObject);
         }
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void HealPlayer()
     {
-        if (other.CompareTag("Player"))
+        if (canHeal)
         {
-            other.GetComponent<HealthManager>().Heal(healAmount);
-            HandleObjectDestroy();
+         player.GetComponent<HealthManager>().Heal(healAmount);
         }
-    }
-
-    private void HandleObjectDestroy()
-    {
-        trailRenderer.emitting = false;
-        Destroy(gameObject, trailRenderer.time);
     }
 }
